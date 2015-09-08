@@ -23,3 +23,11 @@ splitWith predicate [] = []
 splitWith predicate xs = let (pre,post) = break predicate xs
                              (_,left) = span predicate post
                          in  pre : splitWith predicate left
+
+concateListWithNewLine (x:xs) = x ++ "\n" ++ concateListWithNewLine xs
+concateListWithNewLine [] = []
+
+concateChar2CharList x y = x : y : []
+
+transpose x = let [part1,part2] = words x
+              in concateListWithNewLine(zipWith concateChar2CharList part1 part2)
