@@ -28,3 +28,27 @@ identity xs = foldr (:) [] xs
 
 append :: [a] -> [a] -> [a]
 append xs ys = foldr (:) ys xs
+
+foldl' (+) 1 (2:[])
+
+-- incorrect: seq is hidden by the application of someFun
+-- since someFunc will be evaluated first, seq may occur to late
+hiddenInside x y = someFunc (x `seq` y)
+
+-- incorrect: a variation of the above mistake
+hiddenByLet x y z = let a = x `seq` someFunc y
+                    in anotherFunc a z
+
+-- correct: seq will be evaluated first, forcing evaluation of x
+onTheOutside x y = x `seq` someFunc y
+
+chained x y z = x `seq` y `seq` someFunc z
+
+badExpression step zero (x:xs) =
+    seq (step zero x)
+        (badExpression step (step zero x) xs)
+        
+strictPair (a,b) = a `seq` b `seq` (a,b)
+
+strictList (x:xs) = x `seq` x : strictList xs
+strictList [] = []
