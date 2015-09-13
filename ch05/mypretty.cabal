@@ -1,0 +1,18 @@
+Name:    mypretty
+Version: 0.1
+
+-- This is a comment. It stretches to the end of the line.
+Synopsis: My pretty printing libarary,  with JSON support
+Description:
+  A simple pretty-printing libarary that illustrates how to
+  develop a Haskell libarary.
+Author: Real World Haskell
+Maintainer: nobody@realworldhaskell.org
+
+Cabal-Version: >= 1.2
+
+library
+  Exposed-Modules: Prettify
+                   PrettyJSON
+                   SimpleJSON
+  Build-Depends:   base >= 2.0
