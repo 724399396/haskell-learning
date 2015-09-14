@@ -13,7 +13,6 @@ Maintainer:  nobody@realworldhaskell.org
 Cabal-Version: >= 1.2
 
 library
-    Exposed-Modules: Prettify
-                     PrettyJSON
-                     SimpleJSON
-    Build-Depends: base >= 2.0
+  Exposed-Modules: Prettify
+                   SimpleJSON
+  Build-Depends:   base >= 2.0
