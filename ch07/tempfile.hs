@@ -63,7 +63,7 @@ withTempFile pattern func =
            -- takes two functions: one to run, and a different one to run if
            -- the first raised an exception. If getTemporaryDirectory raised
            -- an exception, just use "." (the current working directory).
-           tempdir <- catch (getTemporaryDirectory) (\_ -> return ".")
+           tempdir <- getTemporaryDirectory
            (tempfile, temph) <- openTempFile tempdir pattern
 
            -- Call (func tempfile temph) to perform the action on the temporary
