@@ -109,3 +109,20 @@ luminance (r,g,b) = round (r' * 0.30 + g' * 0.59 + b' * 0.11)
     where r' = fromIntegral r
           g' = fromIntegral g
           b' = fromIntegral b
+
+type Greymap = Array (Int,Int) Pixel
+
+pixmapToGreymap :: Pixmap -> Greymap
+pixmapToGreymap = fmap luminance
+
+data Bit = Zero | One
+           deriving (Eq, Show)
+
+threshold :: (Ix k, Integral a) => Double -> Array k a -> Array k Bit
+threshold n a = binary <$> a
+    where binary i | i < pivot = Zero
+                   | otherwise = One
+        pivot = round $ least + (greatest - least) * n
+        least = fromIntegral $ choose (<) a
+        greatest = fromIntegral $ choose (>) a
+        choose f = foldA1 $ \x y -> if f x y then x else y
