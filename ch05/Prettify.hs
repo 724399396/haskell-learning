@@ -149,12 +149,12 @@ w `fits` (c:cs)    = (w - 1) `fits` cs
 {-- snippet nest --}
 nest :: Int -> Doc -> Doc
 {-- /snippet nest --}
-nest = undefined
+nest n d = text (replicate n ' ') <> d
 
 {-- snippet fill --}
 fill :: Int -> Doc -> Doc
 {-- /snippet fill --}
-fill = undefined
+fill n d = (text (replicate n ' ') `Union` empty) <> d
 
 --instance Show Doc where
 --    show doc = pretty 80 doc
