@@ -1,5 +1,5 @@
 -- file: ch06/SimpleClass.hs
-{-# LANGUAGE TypeSynonymInstances, OverlappingInstances #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 
 import Data.List
 
@@ -9,8 +9,8 @@ class Foo a where
 instance Foo a => Foo [a] where
   foo = concat . intersperse ", " . map foo
 
-instance foo Char where
+instance Foo Char where
   foo c = [c]
 
-instance foo String where
+instance Foo String where
   foo = id

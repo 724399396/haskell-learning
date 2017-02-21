@@ -14,5 +14,6 @@ Cabal-Version: >= 1.2
 
 library
   Exposed-Modules: Prettify
+                   PrettyJSON
                    SimpleJSON
   Build-Depends:   base >= 2.0

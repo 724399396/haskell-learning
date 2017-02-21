@@ -1,4 +1,6 @@
-import Data.Char (digitToInt)
+import Data.Char (digitToInt,isDigit,isSpace)
+import Data.List
+
 safeHead :: [a] -> Maybe a
 safeTail :: [a] -> Maybe [a]
 safeLast :: [a] -> Maybe a
@@ -36,10 +38,13 @@ transpose x = let [part1,part2] = words x
 asInt_fold　:: String -> Int
 asInt_fold ('-':xs) = negate (asInt_fold xs)
 asInt_fold xs = foldl step 0 xs
-                             where step init x = init * 10 + digitToInt x
+                             where step acc x = acc * 10 + digitToInt x
 
 type ErrorMessage = String
---asInt_either :: String -> Ei
+asInt_either :: String -> Either ErrorMessage Int
+asInt_either ('-':xs) | all isDigit xs = Right $ asInt_fold ('-':xs)
+asInt_either xs | all isDigit xs = Right $ asInt_fold xs
+asInt_either xs = Left $ "non-digit '" ++ [head $ filter (not.isDigit) xs] ++ "'"
 
 myConcat :: [[a]] -> [a]
 myConcat xs = foldr (++) [] xs
@@ -52,9 +57,24 @@ myTakeWhile pre (x:xs) | pre x = x : myTakeWhile pre xs
 myTakeWhile2 :: (a -> Bool) -> [a] -> [a]
 myTakeWhile2 pre xs = foldr step [] xs
     where step a b | pre a = a : b
-                   | otherwise = [] 
+                   | otherwise = b
 
-myAny pre xs = foldl step False xs
+myGroupBy :: (a -> a -> Bool) -> [a] -> [[a]]
+myGroupBy pred xs = let (nowSame,acc) =  foldr step ([],[]) xs
+                    in
+                      nowSame:acc
+                      where step x (nowSame,acc) = if (null nowSame || pred x (head nowSame))
+                               then (x:nowSame, acc)
+                               else ([x], nowSame:acc)
+
+myAny pre xs = foldl' step False xs
     where step init x = pre x || init
 
+myWords xs = let (word,acc) = foldr step ([],[]) xs
+             in filter (not.null) (word:acc)
+               where step x (unCompleteWord,acc) = if (isSpace x)
+                                      then ([],unCompleteWord:acc)
+                                      else (x:unCompleteWord,acc)
 
+myUnlines :: [String] -> String
+myUnlines = foldr (\x acc -> x ++ "\n" ++ acc) ""

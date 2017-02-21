@@ -1,5 +1,7 @@
 -- file: ch06/JSONClass.hs
 {-# LANGUAGE TypeSynonymInstances #-}
+import Control.Arrow (second)
+
 type JSONError = String
 class JSON a where
   toJValue :: a -> JValue
@@ -12,12 +14,12 @@ instance JSON JValue where
 instance JSON Bool where
   toJValue = JBool
   fromJValue (JBool b) = Right b
-  fromJvalue _ = Left "not a JSON boolen"
+  fromJValue _ = Left "not a JSON boolen"
 
-instance JSON String where
-  toJValue = JString
-  fromJvalue (JString s) = Right s
-  fromJvalue _ = Left "not a JSON string"
+--instance JSON String where
+--  toJValue = JString
+--  fromJValue (JString s) = Right s
+--  fromJValue _ = Left "not a JSON string"
 
 doubleToJValue :: (Double -> a) -> JValue -> Either JSONError a
 doubleToJValue f (JNumber v) = Right (f v)
@@ -25,15 +27,15 @@ doubleToJValue _ _ = Left "not a JSon number"
 
 instance JSON Int where
   toJValue = JNumber . realToFrac
-  fromJvalue  = doubleToJValue round
+  fromJValue  = doubleToJValue round
 
 instance JSON Integer where
-  toJValue = Jnumber . realToFrac
-  fromJvalue = doubleToJValue round
+  toJValue = JNumber . realToFrac
+  fromJValue = doubleToJValue round
 
 instance JSON Double where
   toJValue = JNumber
-  fromJvalue = doubleToJValue id
+  fromJValue = doubleToJValue id
 
 newtype JAry a = JAry {
   fromJAry :: [a]
@@ -47,7 +49,7 @@ newtype JObj a = JObj {
 } deriving (Eq, Ord, Show)
 
 data JValue = JString String
-            | JNumer Double
+            | JNumber Double
             | JBool Bool
             | JNll
             | JObject (JObj JValue) -- was [(String,JValue)]
@@ -63,10 +65,10 @@ instance (JSON a) => JSON (JAry a) where
   fromJValue = jaryFromJValue
 
 listToJValues :: (JSON a) => [a] -> [JValue]
-listTOJvalues = map toJValue
+listToJValues = map toJValue
 
 jvaluesToJAry :: [JValue] -> JAry JValue
-jvaluestoJAry = JAry
+jvaluesToJAry = JAry
 
 jaryOfJValuesToJValue :: JAry JValue -> JValue
 jaryOfJValuesToJValue = JArray
@@ -82,14 +84,13 @@ whenRight _ (Left err) = Left err
 whenRight f (Right a) = Right (f a)
 
 mapEithers :: (a -> Either b c) -> [a] -> Either b [c]
-mapEithers f (x:xs) = case MapEithers f xs of
+mapEithers f (x:xs) = case mapEithers f xs of
                           Left err -> Left err
                           Right ys -> case f x of
-                            Left err -> Left er0r
+                            Left err -> Left err
                             Right y -> Right (y:ys)
 mapEithers _ _ = Right []
 
-import Control.Arrow (second)
 
 instance (JSON a) => JSON (JObj a) where
   toJValue = JObject . JObj . map (second toJValue) . fromJObj

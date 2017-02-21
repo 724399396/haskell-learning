@@ -1,6 +1,5 @@
 -- file: ch06/AutomaticDerivation.hs
 data CannotShow = CannotShow
-                  deriving (Show)
 
 -- will not compile, since Cannot Show is not an instance of Show
 data CannotDeriveShow = CannotDeriveShow CannotShow
