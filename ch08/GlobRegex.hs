@@ -2,7 +2,8 @@
 module GlobRegex
     (
         globToRegex,
-        matchesGlob
+        matchesGlob,
+        matchesGlobI
     ) where
 
 import Text.Regex.Posix ((=~))
@@ -10,6 +11,8 @@ import Text.Regex.Posix ((=~))
 globToRegex :: String -> String
 
 globToRegex cs = '^' : globToRegex' cs ++ "$"
+
+globToRegexI cs = "(?i)^" ++ globToRegex' cs ++ "$"
 
 globToRegex' :: String -> String
 globToRegex' "" = ""
@@ -35,3 +38,6 @@ charClass [] = error "unterminated character class"
 
 matchesGlob :: FilePath -> String -> Bool
 name `matchesGlob` pat = name =~ globToRegex pat
+
+matchesGlobI :: FilePath -> String -> Bool
+name `matchesGlobI` pat = name =~ globToRegexI pat

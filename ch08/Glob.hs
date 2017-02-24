@@ -3,11 +3,13 @@ module Glob (namesMatching) where
 import System.Directory (doesDirectoryExist, doesFileExist,
                          getCurrentDirectory, getDirectoryContents)
 
-import System.FilePath (dropTrailingPathSeparator, splitFileName, (</>))
+import System.FilePath (dropTrailingPathSeparator, splitFileName, (</>),
+                       isSearchPathSeparator)
 
 import Control.Exception (handle)
 import Control.Monad (forM)
-import GlobRegex (matchesGlob)
+import GlobRegex (matchesGlob, matchesGlobI)
+import Data.List (isSuffixOf)
 
 isPattern :: String -> Bool
 isPattern = any (`elem` "[*?")
@@ -47,11 +49,13 @@ listMatches dirName pat = do
                 then getCurrentDirectory
                 else return dirName
     do
-        names <- getDirectoryContents dirName'
+        names <- if ("**" `isSuffixOf` pat)
+                 then subFiles dirName'
+                 else getDirectoryContents dirName'
         let names' = if isHidden pat
                      then filter isHidden names
                      else filter (not . isHidden) names
-        return (filter (`matchesGlob` pat) names')
+        return (filter (`systemDetermin` pat) names')
 
 isHidden ('.':_) = True
 isHidden _ = False
@@ -62,3 +66,25 @@ listPlain dirName baseName = do
               then doesDirectoryExist dirName
               else doesNameExist (dirName </> baseName)
     return (if exists then [baseName] else [])
+
+systemDetermin :: FilePath -> String -> Bool
+systemDetermin = if (isSearchPathSeparator ':')
+                      then matchesGlobI
+                      else matchesGlob
+
+subFiles :: FilePath -> IO [FilePath]
+subFiles path = do
+  con <- getDirectoryContents path
+  let fullPath = map (path </>) $ filter (\x -> x /= "." && x /= "..") con 
+  dirs <- filterM doesDirectoryExist fullPath
+  subFiles <- mapM subFiles dirs
+  files <- filterM doesFileExist fullPath
+  return (files ++ concat subFiles)
+
+filterM :: (FilePath -> IO Bool) -> [FilePath] -> IO [FilePath]
+filterM pre fs = foldr (\x accIO -> do
+                                      acc <- accIO
+                                      m <- pre x
+                                      return $ if (m)
+                                        then  x:acc
+                                        else acc) (return []) fs
