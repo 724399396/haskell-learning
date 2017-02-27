@@ -1,10 +1,14 @@
 -- file: ch09/ControlledVisit.hs
+module ControlledVisit where
+
 import System.Directory (Permissions(..), getModificationTime, getPermissions,getDirectoryContents)
 import Data.Time.Clock (UTCTime)
-import System.FilePath (takeExtension,(</>))
+import System.FilePath (takeExtension,splitDirectories,(</>))
 import Control.Exception (bracket,handle, SomeException)
 import System.IO (IOMode(..), hClose, hFileSize, openFile)
 import Control.Monad (liftM,forM)
+import Data.List (sortBy)
+import Prelude hiding (traverse)
 
 data Info = Info {
     infoPath :: FilePath,
@@ -21,7 +25,7 @@ traverse order path = do
   contents <- mapM getInfo (path : map (path </>) names)
   liftM concat $ forM (order contents) $ \info -> do
       if isDirectory info && infoPath info /= path
-        then Main.traverse order (infoPath info)
+        then traverse order (infoPath info)
         else return [info]
 
 getUsefulContents :: FilePath -> IO [String]
@@ -44,17 +48,26 @@ getInfo path = do
   modified <- maybeIO (getModificationTime path)
   return (Info path perms size modified)
 
-  traverseVerbose order path = do
-    names <- getDirectoryContents path
-    let usefulNames = filter (`notElem` [".",".."]) names
-    contents <- mapM getEntryName ("" : usefulNames)
-    recursiveContents <- mapM recurse (order contents)
-    return (concat recursiveContents)
-  where getEntryName name = getInfo (path </> name)
-        isDirectory info = case infoPerms info of
-                                Nothing -> false
-                                Just perms -> searchable perms
-        recurse info = do
-          if isDirectory info && infoPath info /= path
-            then traverseVerbose order (infoPath info)
-            else return [info]
+traverseVerbose order path = do
+  names <- getDirectoryContents path
+  let usefulNames = filter (`notElem` [".",".."]) names
+  contents <- mapM getEntryName ("" : usefulNames)
+  recursiveContents <- mapM recurse (order contents)
+  return (concat recursiveContents)
+    where getEntryName name = getInfo (path </> name)
+          isDirectory info = case infoPerms info of
+                               Nothing -> False
+                               Just perms -> searchable perms
+          recurse info = do
+            if isDirectory info && infoPath info /= path
+              then traverseVerbose order (infoPath info)
+              else return [info]
+
+liftCompare :: (a -> a ->  Ordering) -> (Info -> a) -> Info -> Info -> Ordering
+liftCompare cmp ext ia ib = (ext ia) `cmp` (ext ib)
+
+traverseReverse ::  FilePath -> IO [Info]
+traverseReverse = traverse (sortBy $ liftCompare compare infoPath)
+
+traversePostOrder :: FilePath -> IO [Info]
+traversePostOrder = traverse (sortBy $ flip $ liftCompare compare (length . splitDirectories . infoPath))

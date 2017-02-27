@@ -1,24 +1,28 @@
+import ControlledVisit
+import System.FilePath ((</>),takeExtension,takeFileName)
+import Data.Char (toLower)
+
 data Iterate seed = Done { unwrap :: seed }
                   | Skip { unwrap :: seed }
-                  | Continue {unwrap :: sedd}
+                  | Continue {unwrap :: seed}
                     deriving (Show)
 
 type Iterator seed = seed -> Info -> Iterate seed
 
-foldTree :: Iterator a -> a -> FilePath -> IO a
+foldTree :: Iterator a -> ([FilePath] -> [FilePath]) -> a -> FilePath -> IO a
 
-foldTree iter initSeed path = do
+foldTree iter sort initSeed path = do
     endSeed <- fold initSeed path
     return (unwrap endSeed)
   where
-    fold seed subpath = getUsefulContents subpath >>= walk seed
+    fold seed subpath = getUsefulContents subpath >>= (\subfiles -> walk seed (sort subfiles))
 
     walk seed (name:names) = do
       let path' = path </> name
       info <- getInfo path'
       case iter seed info of
         done@(Done _) -> return done
-        Skip seed' -> walk seed' path'
+        Skip seed' -> walk seed' names
         Continue seed'
           | isDirectory info -> do
               next <- fold seed' path'
@@ -29,8 +33,8 @@ foldTree iter initSeed path = do
     walk seed _ = return (Continue seed)
 
 atMostThreePictures :: Iterator [FilePath]
-asMostThreePictures paths info
-    | length paths = 3
+atMostThreePictures paths info
+    | length paths == 3
       = Done paths
     | isDirectory info && takeFileName path == ".svn"
       = Skip paths

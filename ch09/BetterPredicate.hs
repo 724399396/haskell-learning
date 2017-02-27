@@ -42,7 +42,7 @@ simpleFileSize path = do
     return size
 
 saferFileSize :: FilePath -> IO (Maybe Integer)
-saferFileSize path = do
+saferFileSize path = handleAny (const $ return Nothing) $ do
         h <- openFile path ReadMode
         size <- hFileSize h
         hClose h
@@ -108,4 +108,4 @@ infix 4 ==?
 infixr 3 &&?
 infix 4 >?
 
-myTest5 = liftPath takeExtenion ==? ".cpp" &&? sizeP >? 131072
+myTest5 = liftPath takeExtension ==? ".cpp" &&? sizeP >? 131072
