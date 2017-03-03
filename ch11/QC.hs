@@ -5,12 +5,13 @@ import Data.Char
 import Data.List
 import Data.Word
 import Control.Monad
-import Data.Monoid
+import Data.Monoid hiding ((<>))
 import Test.QuickCheck
 
 {-- snippet ArbitraryChar --}
-instance Arbitrary Char where
+{-- instance Arbitrary Char where
     arbitrary = elements (['A'..'Z'] ++ ['a' .. 'z'] ++ " ~!@#$%^&*()")
+--}
 {-- /snippet ArbitraryChar --}
 
 {-
@@ -136,7 +137,6 @@ prop_mempty_id x =
     mempty `mappend` x == x
   &&
     x `mappend` mempty == (x :: Doc)
-
 {-- /snippet monoid_prop --}
 
 --

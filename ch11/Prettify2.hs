@@ -10,7 +10,8 @@ module Prettify2
       hcat,
       punctuate,
       compact,
-      pretty) where
+      pretty,
+      (<>)) where
 
 import Data.Monoid (Monoid(..))
 
@@ -22,6 +23,10 @@ data Doc = Empty
          | Union Doc Doc
          deriving (Show, Eq)
 
+instance Monoid Doc where
+  mempty = empty
+  mappend = (<>)
+
 empty :: Doc
 (<>) :: Doc -> Doc -> Doc
 
@@ -29,6 +34,7 @@ empty = Empty
 
 Empty <> y = y
 x <> Empty = x
+x <> y = Concat x y
 
 char :: Char -> Doc
 char c = Char c

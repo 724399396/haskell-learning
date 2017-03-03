@@ -290,6 +290,6 @@ solve xs = catMaybes $ map (addCheckDigit m) checkDigits
           m = buildMap (init xs)
           addCheckDigit m k = (++[k]) <$> M.lookup k m
 
-withRow :: Int -> Pixmap -> (RunLength Bit -> a) -> a
-withRow n greymap f = f. runLength . elems $ posterized
-    where posterized = threshold 0.4 . fmap luminance . row n $ greymap
+--withRow :: Int -> Pixmap -> (RunLength Bit -> a) -> a
+--withRow n greymap f = f. runLength . elems $ posterized
+--    where posterized = threshold 0.4 . fmap luminance . row n $ greymap

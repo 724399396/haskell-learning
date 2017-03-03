@@ -1,25 +1,25 @@
 import QC
-
-{-- snippet testscript --}
 import Prettify2
-import Test.QuickCheck.Batch
+import Test.QuickCheck.Test
+import Test.QuickCheck.Random
 
-options = TestOptions
-      { no_of_tests         = 200
-      , length_of_tests     = 1
-      , debug_tests         = False }
+argsGen = do
+  qcGen <- newQCGen
+  return Args  {
+        replay          = Just(qcGen, 100)
+      , maxSuccess      = 200
+      , maxDiscardRatio = 10
+      , maxSize         = 200
+      , chatty = True}
+        
 
-main = do
-    runTests "simple" options
-        [ run prop_empty_id
-        , run prop_char
-        , run prop_text
-        , run prop_line
-        , run prop_double
-        ]
+main = argsGen >>= (\args ->
+  quickCheckWith args prop_empty_id >>
+       quickCheckWith args prop_char >>
+       quickCheckWith args prop_text >>
+       quickCheckWith args prop_line >>
+       quickCheckWith args prop_double >>
+       quickCheckWith args prop_hcat >>
+       quickCheckWith args prop_punctuate' >>
+       quickCheckWith args prop_mempty_id)
 
-    runTests "complex" options
-        [ run prop_hcat
-        , run prop_puncutate'
-        ]
-{-- /snippet testscript --}
