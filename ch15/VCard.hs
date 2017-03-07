@@ -8,7 +8,7 @@ albulena = [(Home, "+355-652-55512")]
 nils = [(Mobile, "+47-922-55-512"), (Business, "+47-922-12-121"),
         (Home, "+47-925-55-121"), (Business, "+47-922-25-551")]
 
-twalumbda = [(Business, "+260-02-55-5121")]
+twalumba = [(Business, "+260-02-55-5121")]
 
 onePersonalPhone :: [(Context, Phone)] -> Maybe Phone
 onePersonalPhone ps = case lookup Home ps of

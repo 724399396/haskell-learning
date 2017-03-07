@@ -49,5 +49,4 @@ split delim str =
                   [] -> []
                   x -> -- If there is more data to process,
                        -- call split recursively to process it
-
                        split delim (tail x)

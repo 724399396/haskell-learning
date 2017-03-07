@@ -1,3 +1,5 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
 module Supply
   (
     Supply,
@@ -5,11 +7,10 @@ module Supply
     runSupply
   ) where
 
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-
 import Control.Monad.State
 
 newtype Supply s a = S (State [s] a)
+  deriving (Monad,Applicative,Functor)
 
 runSupply :: Supply s a -> [s] -> (a, [s])
 
@@ -18,9 +19,9 @@ next :: Supply s (Maybe s)
 unwrapS :: Supply s a -> State [s] a
 unwrapS (S s) = s
 
-instance Monad (Supply s) where
+{- instance Monad (Supply s) where
   s >>= m = S (unwrapS s >>= unwrapS . m)
-  return = S . return
+  return = S . return -}
 
 next = S $ do st <- get
               case st of

@@ -1,6 +1,6 @@
 module Random where
 
-import Control.Monad (liftM2)
+import Control.Monad (liftM)
 import Control.Monad.State
 
 import System.Random
@@ -50,7 +50,7 @@ getCountedRandom = do
   return val
 
 getCount :: CRState Int
-getCount = crCount 'liftM' get
+getCount = crCount `liftM` get
 
 putCount :: Int -> CRState ()
 putCount a = do

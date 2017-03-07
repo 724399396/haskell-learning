@@ -117,7 +117,7 @@ rpnShow i =
 {-- /snippet rpnShow --}
 {-- snippet simplify --}
 {- Perform some basic algebraic simplifications on a SymbolicManip. -}
-simplify :: (Num a) => SymbolicManip a -> SymbolicManip a
+simplify :: (Num a, Eq a) => SymbolicManip a -> SymbolicManip a
 simplify (BinaryArith op ia ib) =
     let sa = simplify ia
         sb = simplify ib
@@ -138,26 +138,26 @@ simplify x = x
 {- New date type: Units. A Units type contains a number
 and a SymbolicManip, which represents the units of measure
 A simple label would be something like (Symbol "m") -}
-data Num a => Units a = Units a (SymbolicManip a)
+data Units a = Units a (SymbolicManip a)
             deriving (Eq)
 
-instance (Num a) => Num (Units a) where
+instance (Num a, Eq a) => Num (Units a) where
        (Units xa ua) + (Units xb ub)
            | ua == ub = Units (xa + xb) ua
            | otherwise = error "Mis-mathced units in add or substract"
        (Units xa ua) - (Units xb ub) = (Units xa ua) + (Units (xb * (-1)) ub)
-       (Units xa ua) * (Units xb ub) = Units (negate xa) ua
-       negate (Inits xa ua) = Units (negate xa) ua
+       (Units xa ua) * (Units xb ub) = Units (xa * xb) (ua * ub)
+       negate (Units xa ua) = Units (negate xa) ua
        abs (Units xa ua) = Units (abs xa) ua
        signum (Units xa _) = Units (signum xa) (Number 1)
        fromInteger i = Units (fromInteger i) (Number 1)
 
-instance (Fractional a) => Fractional (Units a) where
+instance (Fractional a, Eq a) => Fractional (Units a) where
     (Units xa ua) / (Units xb ub) = Units (xa / xb) (ua / ub)
     recip a = 1 / a
     fromRational r = Units (fromRational r) (Number 1)
 
-instance (Floating a) => Floating (Units a) where
+instance (Floating a, Eq a) => Floating (Units a) where
   pi = (Units pi (Number 1))
   exp _ = error "exp not yet implemented in Units"
   log _ = error "log not yet implemented in Units"
@@ -190,14 +190,21 @@ instance (Floating a) => Floating (Units a) where
   cosh = error "cosh not yet implemented in Units"
   tanh = error "tanh not yet implemented in Units"
   asinh = error "asinh not yet implemented in Units"
-  acosh = error "acosh not yet\  implemented in Units"
+  acosh = error "acosh not yet implemented in Units"
   atanh = error "atanh not yet implemented in Units"
 
 units :: (Num z) => z -> String -> Units z
-units a b = Units a\   (Symbol b)
+units a b = Units a (Symbol b)
 
 dropUnits :: (Num z) => Units z -> z
 dropUnits (Units x _) = x
 
 deg2rad x = 2 * pi * x / 360
 rad2deg x = 360 * x / (2 * pi)
+
+
+instance (Show a, Num a, Eq a) => Show (Units a) where
+  show (Units xa ua) = show xa ++ "_" ++ prettyShow (simplify ua)
+
+test :: (Num a) => a
+test = 2 * 5 + 3
