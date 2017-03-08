@@ -1,5 +1,5 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving, MultiParamTypeClasses,
-    TypeSynonymInstances #-}
+    TypeSynonymInstances, FlexibleInstances #-}
 
 module WriterIO where
 
@@ -18,7 +18,7 @@ data Event = Open FilePath IOMode
 
 {-- snippet WriterIO --}
 newtype WriterIO a = W { runW :: Writer [Event] a }
-    deriving (Monad, MonadWriter [Event])
+    deriving (Functor, Applicative, Monad, MonadWriter [Event])
 {-- /snippet WriterIO --}
 
 {-- snippet runWriterIO --}

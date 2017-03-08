@@ -17,7 +17,7 @@ import qualified System.IO
 import Control.Monad.Trans (MonadIO(..))
 
 newtype HandleIO a = HandleIO { runHandleIO :: IO a }
-    deriving (Monad)
+    deriving (Functor,Applicative,Monad)
 
 openFile :: FilePath -> IOMode -> HandleIO Handle
 openFile path mode = HandleIO (System.IO.openFile path mode)

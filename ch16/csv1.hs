@@ -6,37 +6,36 @@ import Text.ParserCombinators.Parsec
 
 csvFile :: GenParser Char st [[String]]
 csvFile =
-	do result <- many line
-	   eof          -- end of file
-	   return result
+  do result <- many line
+     eof          -- end of file
+     return result
 
 -- Each line contains 1 or more cells, separated by a comma
 line :: GenParser Char st [String]
 line = 
-    do result <- cells
-       eol                       -- end of line
-       return result
+  do result <- cells
+     eol                       -- end of line
+     return result
 
 -- Build up a list of cells, Try to parse the first cell, then figure out
 -- what ends the cell.
 cells :: GenParser Char st [String]
 cells =
-	do first <- cellContent
-	   next <- remainingCells
-	   return (first : next)
-
+  do first <- cellContent
+     next <- remainingCells
+     return (first : next)
 
 -- The cell either ends with a comma, indicating that i or more cells follow,
 -- or it doesn't, indicating that we're at the end of the cells for this line
 remainingCells :: GenParser Char st [String]
 remainingCells =
-	(char ',' >> cells)   -- Found comma? More cells coming
-	<|> (return [])       -- No comma? Return [], no more cells
+  (char ',' >> cells)   -- Found comma? More cells coming
+  <|> (return [])       -- No comma? Return [], no more cells
 
 -- Each cell cotains 0 or more characters, which must not be a comma or EOL
 cellContent :: GenParser Char st String
 cellContent =
-	many (noneOf ",\n")
+  many (noneOf ",\n")
 
 -- The end of line character is \n
 eol :: GenParser Char st Char
