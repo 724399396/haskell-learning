@@ -1,3 +1,11 @@
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses
+           , UndecidableInstances #-}
+module MaybeT where
+
+import Control.Monad.Trans
+import Control.Monad
+import Control.Monad.State
+
 newtype MaybeT m a = MaybeT {
   runMaybeT :: m (Maybe a)
   }
@@ -11,3 +19,31 @@ x `bindMT` f = MaybeT $ do
 
 x `altBindMt` f =
   MaybeT $ runMaybeT x >>= maybe (return Nothing) (runMaybeT . f)
+
+returnMT :: (Monad m) => a -> MaybeT m a
+returnMT a = MaybeT $ return (Just a)
+
+failMT :: (Monad m) => t -> MaybeT m a
+failMT _ = MaybeT $ return Nothing
+
+instance (Monad m) => Monad (MaybeT m) where
+  return = returnMT
+  (>>=) = bindMT
+  fail = failMT
+
+instance Monad m => Applicative (MaybeT m) where
+  pure = returnMT
+  (<*>) = undefined
+
+instance Monad m => Functor (MaybeT m) where
+  fmap f a = (pure f) <*> a
+
+instance MonadTrans MaybeT where
+  lift m = MaybeT (Just `liftM` m)
+
+instance (MonadIO m) => MonadIO (MaybeT m) where
+  liftIO m = lift (liftIO m)
+
+instance (MonadState s m) => MonadState s (MaybeT m) where
+  get = lift get
+  put k = lift (put k)
