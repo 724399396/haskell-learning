@@ -5,6 +5,7 @@ module MaybeT where
 import Control.Monad.Trans
 import Control.Monad
 import Control.Monad.State
+import Control.Monad.Writer
 
 newtype MaybeT m a = MaybeT {
   runMaybeT :: m (Maybe a)
@@ -47,3 +48,8 @@ instance (MonadIO m) => MonadIO (MaybeT m) where
 instance (MonadState s m) => MonadState s (MaybeT m) where
   get = lift get
   put k = lift (put k)
+
+instance (MonadWriter s m) => MonadWriter s (MaybeT m) where
+  tell x = lift (tell x)
+  listen = undefined
+  pass = undefined
