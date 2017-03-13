@@ -2,3 +2,7 @@
 *.exe
 *.o
 *.hi
+.cabal-sandbox/
+cabal.sandbox.config
+*.cabal
+*.db
