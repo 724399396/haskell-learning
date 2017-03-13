@@ -8,7 +8,7 @@ import Database.HDBC
 import Network.Socket(withSocketsDo)
 
 -- GUI libraries
-import Graphics.UI.Gtk hiding (disconnect)
+import Graphics.UI.Gtk hiding (disconnect, add)
 import Graphics.UI.Gtk.Glade
 
 -- Threading
@@ -23,12 +23,12 @@ data GUI = GUI {
   mwFetchBt :: Button,
   mwExitBt :: Button,
   statusWin :: Dialog,
-  swOkBt :: Button,
+  swOKBt :: Button,
   swCancelBt :: Button,
   swLabel :: Label,
   addWin :: Dialog,
   awOKBt :: Button,
-  awCancelbt :: Button,
+  awCancelBt :: Button,
   awEntry :: Entry}
   
   
@@ -65,11 +65,9 @@ loadGlade gladepath =
 
     -- Load all buttons
     [mwAdd, mwUpdate, mwDownload, mwFetch, mwExit, swOK, swCancel,
-     auOk, auCancel] <-
+     auOK, auCancel] <-
       mapM (xmlGetWidget xml castToButton)
-      ["addButton", "updateButton", "downloadButton",
-"fetchButton", "exitButton", "okButton", "cancelButton",
-"auOK", "auCancel"]
+      ["addButton", "updateButton", "downloadButton","fetchButton", "exitButton", "okButton", "cancelButton","auOK", "auCancel"]
 
     sw <- xmlGetWidget xml castToDialog "statusDialog"
     swl <- xmlGetWidget xml castToLabel "statusLabel"
@@ -82,7 +80,7 @@ loadGlade gladepath =
 connectGui gui dbh =
   do -- When the close button is clicked, terminate the GUI loop
      -- by calling TEK mainQuit function
-    onDesctory (mainWin gui) mainQuit
+    onDestroy (mainWin gui) mainQuit
 
     -- Main window buttons
     onClicked (mwAddBt gui) (guiAdd gui dbh)
@@ -95,20 +93,15 @@ guiAdd gui dbh =
   do -- Initialize the add URL window
     entrySetText (awEntry gui) ""
     onClicked (awCancelBt gui) (widgetHide (addWin gui))
-    onClicked (awOkBt gui) procOK
+    onClicked (awOKBt gui) procOK
 
     -- Show the add URL window
     windowPresent (addWin gui)
-  where procOk =
+  where procOK =
           do url <- entryGetText (awEntry gui)
              widgetHide (addWin gui) -- Remove the dialog
-               add dbh url
-
-add dbh url =
-  do addPodcast dbh pc
-     commit dbh
-  where pc = Podcast {castId = 0, castURL = url}
-
+             add dbh url
+             
 statusWindow :: IConnection conn =>
                 GUI
              -> conn
@@ -120,8 +113,8 @@ statusWindow gui dbh title func =
     labelSetText (swLabel gui) ""
 
     -- Diable the OK button, enable Cancel button
-    widgetSetSensitivity (swOkBt gui) False
-    widgetSetSensitivity (swCancel gui) True
+    widgetSetSensitivity (swOKBt gui) False
+    widgetSetSensitivity (swCancelBt gui) True
 
     -- Set the title
     windowSetTitle (statusWin gui) title
@@ -130,31 +123,69 @@ statusWindow gui dbh title func =
     childThread <- forkIO childTasks
 
     -- Define what happens when clicking on Cancel
-    onClicked (swCancleBt gui) (cancelChild childThread)
+    onClicked (swCancelBt gui) (cancelChild childThread)
 
     -- Show the window
     windowPresent (statusWin gui)
+  where childTasks =
+          do updateLabel "Starting thread..."
+             func updateLabel
+             -- After the child task finishes, enable OK
+             -- and diable Cancel
+             enableOK
+        enableOK =
+          do widgetSetSensitivity (swCancelBt gui) False
+             widgetSetSensitivity (swOKBt gui) True
+             onClicked (swOKBt gui) (widgetHide (statusWin gui))
+             return ()
 
-update dbh =
+        updateLabel text =
+          labelSetText (swLabel gui) text
+        cancelChild childThread =
+          do killThread childThread
+             yield
+             updateLabel "Action has been cancelled."
+             enableOK
+
+guiUpdate :: IConnection conn => GUI -> conn -> IO ()
+guiUpdate gui dbh =
+  statusWindow gui dbh "Pod: Update" (update dbh)
+
+guiDownload gui dbh =
+  statusWindow gui dbh "Pod: Download" (download dbh)  
+
+guiFetch gui dbh =
+  statusWindow gui dbh "Pod: Fetch"
+                   (\logf -> update dbh logf >> download dbh logf)
+
+add dbh url =
+  do addPodcast dbh pc
+     commit dbh
+  where pc = Podcast {castId = 0, castURL = url}
+
+update :: IConnection conn => conn -> (String -> IO ()) -> IO ()
+update dbh logf =
   do pclist <- getPodcasts dbh
      mapM_ procPodcast pclist
+     logf "Update complete."
   where procPodcast pc =
-          do putStrLn $ "Updating from " ++ (castURL pc)
+          do logf $ "Updating from " ++ (castURL pc)
              updatePodcastFromFeed dbh pc
 
-download dbh =
+download dbh logf =
   do pclist <- getPodcasts dbh
      mapM_ procPodcast pclist
+     logf "Download complete."      
   where procPodcast pc =
-          do putStrLn $ "Considering " ++ (castURL pc)
+          do logf $ "Considering " ++ (castURL pc)
              episodelist <- getPodcastEpisodes dbh pc
              let dleps = filter (\ep -> epDone ep == False)
                          episodelist
              mapM_ procEpisode dleps
              
         procEpisode ep =
-          do putStrLn $ "Downloading " ++ (epURL ep)
-             getEpisode dbh ep
+          do logf $ "Downloading " ++ (epURL ep)
+             getEpisode dbh ep             
 
 syntaxError = putStrLn
   "Usage: pod command [args]\n\
