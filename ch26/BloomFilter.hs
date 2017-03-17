@@ -32,7 +32,6 @@ fromList :: (a -> [Word32])   -- family of hash functions to use
          -> [a]               -- values to populate with
          -> Bloom a
 fromList hash numBits values =
-  B hash . runSTUArray $
-    do mb <- new hash numBits
-       mapM_ (insert mb) values
-       return (mutArray mb)
+  (B hash . runSTUArray) (new hash numBits >>= \mb -> do
+                             mapM_ (insert mb) values
+                             return (mutArray mb))
